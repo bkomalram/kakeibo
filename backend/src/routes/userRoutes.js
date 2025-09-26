@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const database = require('../database');
+const { validationResult } = require('express-validator');
 const { validateCreateUser, validateUpdateUser, validateId, validateLogin } = require('../utils/userValidators');
 
 

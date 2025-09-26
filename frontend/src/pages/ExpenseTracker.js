@@ -60,27 +60,60 @@ const ExpenseTracker = () => {
   };
 
   // Agregar gasto
-  const addExpense = () => {
+  const addExpense = async () => {
     if (newExpense.description && newExpense.amount) {
       const expense = {
         id: Date.now(),
+        user_id: 1,
         ...newExpense,
         amount: parseFloat(newExpense.amount),
         createdAt: new Date().toISOString()
       };
-      setExpenses([expense, ...expenses]);
-      setNewExpense({
-        description: '',
-        amount: '',
-        category: 'Alimentación',
-        date: new Date().toISOString().split('T')[0]
-      });
+
+      try {
+        // Cambia la URL por la de tu API
+        const response = await fetch('/api/expenses', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(expense)
+        });
+        if (!response.ok) throw new Error('Error al guardar el gasto');
+        const savedExpense = await response.json();
+        setExpenses([savedExpense, ...expenses]);
+        setNewExpense({
+          description: '',
+          amount: '',
+          category: 'Alimentación',
+          date: new Date().toISOString().split('T')[0]
+        });
+        console.log('Gasto guardado con ID:', savedExpense);
+      } catch (error) {
+        alert('No se pudo guardar el gasto en la base de datos');
+      }
+
+      
     }
   };
 
   // Eliminar gasto
-  const deleteExpense = (id) => {
-    setExpenses(expenses.filter(exp => exp.id !== id));
+  const deleteExpense = async (id) => {
+    const user_id = 1; // Simulando usuario logueado
+    try {
+        // Cambia la URL por la de tu API
+        const response = await fetch(`/api/expenses/${user_id}/${id}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        if (!response.ok) throw new Error('Error al eliminar el gasto');
+        const deleteResponse = await response.json();
+        setExpenses(expenses.filter(exp => exp.id !== deleteResponse.id));
+      } catch (error) {
+        alert('No se pudo eliminar el gasto en la base de datos');
+      }
   };
 
   // Filtrar gastos

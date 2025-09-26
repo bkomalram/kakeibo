@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const database = require('../database');
+const { validationResult } = require('express-validator');
 const {validateCreateExpense ,  validateUpdateExpense, validateId} = require('../utils/expenseValidators');
 
 
@@ -13,9 +14,9 @@ router.post('/', validateCreateExpense, async (req, res, next) => {
     }
   try {
     const newExpense = req.body;
-    database.raw(`INSERT INTO expenses (id, user_id, amount, description) VALUES(NULL, "${newExpense.user_id}", "${newExpense.amount}", "${newExpense.description}") RETURNING id`)
+    database.raw(`INSERT INTO expenses (id, user_id, amount, description,category,date) VALUES(NULL, "${newExpense.user_id}", "${newExpense.amount}", "${newExpense.description}", "${newExpense.category}", "${newExpense.date}") RETURNING *`)
     .then(([rows]) => rows[0])
-    .then((row) => res.status(201).json({message : "Expense Created. ExpenseId:" + row.id}))
+    .then((row) => res.status(201).json(row))
     .catch(next);
   } catch (err) {
     res.status(400).json({ message: err.message });
@@ -90,7 +91,7 @@ router.delete('/:userId/:id', validateId, async (req, res, next) => {
     .then((row) => row ? 
         database.raw(`UPDATE expenses SET active = false WHERE id = ${expenseId}`)
         .then(([rows]) => rows[0])
-        .then((row) => res.json({ message: 'Expense deleted.' }))
+        .then((row) => res.json({ message: `Expense ${expenseId} deleted.`, id: Number(expenseId) }))
     : res.status(404).json({ message: 'Expense not found' }))
     .catch(next);
   } catch (err) {
