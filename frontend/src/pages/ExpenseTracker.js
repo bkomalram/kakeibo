@@ -1,8 +1,31 @@
-import React, { useState, useRef } from 'react';
-import { PlusCircle, Upload, Trash2, Eye, BarChart3, PieChart, Calendar, DollarSign, TrendingUp, TrendingDown, FileText, Camera, Search } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartsPieChart, Cell, BarChart, Bar } from 'recharts';
+import React, { useState, useRef, useEffect, useContext } from 'react';
+import { PlusCircle, Upload, Trash2, Eye, BarChart3, PieChart, Calendar, DollarSign, TrendingUp, TrendingDown, FileText, Camera, Search, LogOut} from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell, BarChart, Bar } from 'recharts';
+import { AuthContext } from '../context/AuthenticateContext';
+import { useNavigate } from 'react-router-dom';
+
 
 const ExpenseTracker = () => {
+  //navegacion
+    const navigate = useNavigate();
+  // Estados de autenticación
+    const { isAuthenticated, setIsAuthenticated, currentUser, setCurrentUser } = useContext(AuthContext);
+    const [authMode, setAuthMode] = useState('login'); // 'login' o 'register'
+    const [authForm, setAuthForm] = useState({
+      email: '',
+      password: '',
+      confirmPassword: '',
+      name: ''
+    });
+    const [authErrors, setAuthErrors] = useState({});
+  
+    // Usuarios simulados para demo
+    const [users] = useState([
+      { id: 1, email: 'demo@email.com', password: '123456', name: 'Usuario Demo' },
+      { id: 2, email: 'test@email.com', password: 'password', name: 'Test User' }
+    ]);
+  
+  
   const [expenses, setExpenses] = useState([]);
   const [categories] = useState([
     'Alimentación', 'Transporte', 'Entretenimiento', 'Salud', 'Educación', 
@@ -20,6 +43,37 @@ const ExpenseTracker = () => {
 
   // Colores para gráficos
   const chartColors = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#8dd1e1', '#d084d0', '#ffb347', '#87ceeb', '#deb887', '#f0e68c'];
+
+  // Redirigir no está autenticado
+    useEffect(() => {
+      if (!isAuthenticated) {
+          navigate('/'); // Ajusta la ruta según tu configuración
+      }
+      }, [isAuthenticated, navigate]);
+  // Cargar gastos desde la API al montar el componente
+  useEffect(() => {
+    const fetchExpenses = async () => {
+      const user_id = 1; // Simulando usuario logueado
+      try {
+        // Cambia la URL por la de tu API
+        const response = await fetch(`/api/expenses/${user_id}`);
+        if (!response.ok) throw new Error('Error al obtener los gastos');
+        const data = await response.json();
+        setExpenses(data);
+      } catch (error) {
+        alert('No se pudieron cargar los gastos');
+      }
+    };
+    fetchExpenses();
+  }, []);
+
+
+  // Manejar cierre de sesión
+  // Manejar logout
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    setCurrentUser({ email: '', name: '' });
+  };
 
   // Función para procesar imagen de factura (simulada)
   const processReceiptImage = async (file) => {
@@ -88,7 +142,6 @@ const ExpenseTracker = () => {
           category: 'Alimentación',
           date: new Date().toISOString().split('T')[0]
         });
-        console.log('Gasto guardado con ID:', savedExpense);
       } catch (error) {
         alert('No se pudo guardar el gasto en la base de datos');
       }
@@ -137,7 +190,7 @@ const ExpenseTracker = () => {
     const date = new Date();
     date.setDate(date.getDate() - i);
     const dateStr = date.toISOString().split('T')[0];
-    const dayExpenses = expenses.filter(exp => exp.date === dateStr);
+    const dayExpenses = expenses.filter(exp => new Date(exp.date).toISOString().split('T')[0]=== dateStr);
     const total = dayExpenses.reduce((sum, exp) => sum + exp.amount, 0);
     return {
       date: date.toLocaleDateString('es-ES', { weekday: 'short' }),
@@ -145,14 +198,32 @@ const ExpenseTracker = () => {
     };
   }).reverse();
 
+  console.log('last7Days:', last7Days);
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="max-w-6xl mx-auto p-4">
         {/* Header */}
-        <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Control de Gastos</h1>
-          <p className="text-gray-600">Gestiona tus finanzas y procesa facturas automáticamente</p>
-        </div>
+         <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h1 className="text-3xl font-bold text-gray-800 mb-2">Control de Gastos</h1>
+                      <p className="text-gray-600">Gestiona tus finanzas y procesa facturas automáticamente</p>
+                    </div>
+                    <div className="flex items-center space-x-4">
+                      <div className="text-right">
+                        <p className="text-sm text-gray-600">Bienvenido,</p>
+                        <p className="font-semibold text-gray-800">{currentUser ? currentUser.name : 'Invitado'}</p>
+                      </div>
+                      <button
+                        onClick={handleLogout}
+                        className="flex items-center space-x-2 bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors"
+                      >
+                        <LogOut size={16} />
+                        <span>Salir</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
 
         {/* Navigation */}
         <div className="bg-white rounded-lg shadow-lg mb-6">
@@ -250,7 +321,7 @@ const ExpenseTracker = () => {
                   {categoryData.length > 0 ? (
                     <ResponsiveContainer width="100%" height={300}>
                       <RechartsPieChart>
-                        <pie
+                        <Pie
                           dataKey="value"
                           data={categoryData}
                           cx="50%"
@@ -261,7 +332,7 @@ const ExpenseTracker = () => {
                           {categoryData.map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={chartColors[index % chartColors.length]} />
                           ))}
-                        </pie>
+                        </Pie>
                         <Tooltip formatter={(value) => [`$${value.toFixed(2)}`, 'Monto']} />
                       </RechartsPieChart>
                     </ResponsiveContainer>

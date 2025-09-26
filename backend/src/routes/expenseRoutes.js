@@ -27,8 +27,8 @@ router.post('/', validateCreateExpense, async (req, res, next) => {
 router.get('/:userId', async (req, res, next) => {
   try {
     const userId = req.params.userId;
-    database.raw(`SELECT id, user_id, amount, description FROM expenses WHERE user_id = ${userId}`)
-    .then(([rows]) => res.json({ message: rows }))
+    database.raw(`SELECT id, user_id, amount, description, category, date FROM expenses WHERE user_id = ${userId} and active = true ORDER BY date DESC`)
+    .then(([rows]) => res.json(rows))
     .catch(next);
   } catch (err) {
     res.status(500).json({ message: err.message });

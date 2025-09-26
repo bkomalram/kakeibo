@@ -2,19 +2,19 @@ const { body, param, query } = require('express-validator');
 
 // Login Validation
 const validateLogin = [
-    body('username').notEmpty().withMessage('username parameter is required').isString().withMessage('username parameter must be a string'),
+    body('email').notEmpty().withMessage('email parameter is required').isString().withMessage('email parameter must be a string'),
     body('password').notEmpty().withMessage('Password is required')
-    .isLength({ min: 8 }).withMessage('Password must be at least 8 characters long')
-    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/)
-    .withMessage('Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character')
+    .isLength({ min: 2 }).withMessage('Password must be at least 8 characters long')
+    /*.matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/)
+    .withMessage('Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character')*/
 ];
 // User Validation
 const validateCreateUser = [
-    body('username').notEmpty().withMessage('username parameter is required').isString().withMessage('username parameter must be a string'),
+    body('name').notEmpty().withMessage('name parameter is required').isString().withMessage('username parameter must be a string'),
     body('password').notEmpty().withMessage('Password is required')
-    .isLength({ min: 8 }).withMessage('Password must be at least 8 characters long')
-    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/)
-    .withMessage('Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'),
+    .isLength({ min: 2}).withMessage('Password must be at least 2 characters long')
+    /*.matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/)
+    .withMessage('Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character')*/,
     body('role').notEmpty().withMessage('Role parameter missing')
     .isString().withMessage('Role parameter must be a string')
     .matches(/^(OPERADOR|FACTURADOR|ADMINISTRADOR)$/).withMessage('Role must be either OPERADOR, FACTURADOR or ADMINISTRADOR')

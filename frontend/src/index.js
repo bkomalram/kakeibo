@@ -1,15 +1,23 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './index.css';
-import App from './App';
 import ExpenseTracker from './pages/ExpenseTracker';
+import Authenticate from './pages/Authenticate';
 import * as serviceWorker from './serviceWorker';
+import { AuthProvider } from './context/AuthenticateContext';
+
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
-  <React.StrictMode>
-    <ExpenseTracker />
-  </React.StrictMode>
+  <AuthProvider>
+    <Router>
+      <Routes>
+        <Route path="/" element={<Authenticate />} />
+        <Route path="/expense-tracker" element={<ExpenseTracker />} />
+      </Routes>
+    </Router>
+  </AuthProvider>
 );
 
 

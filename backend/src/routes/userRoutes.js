@@ -15,7 +15,7 @@ router.post('/', validateCreateUser, async (req, res, next) => {
     }
   try {
     const newUser = req.body;
-    database.raw(`INSERT INTO users (id, name, password, role) VALUES(NULL,"${newUser.name}", "${btoa(newUser.password)}", "${newUser.role}") RETURNING id`)
+    database.raw(`INSERT INTO users (id, name, email, password, role) VALUES(NULL,"${newUser.name}", "${newUser.email}", "${btoa(newUser.password)}", "${newUser.role}") RETURNING id`)
     .then(([rows]) => rows[0])
     .then((row) => res.status(201).json({message : "User Created. UserId:" + row.id}))
     .catch(next);
@@ -107,9 +107,9 @@ router.post('/login', validateLogin, async (req, res, next) => {
     }
   try {
     const newUser = req.body;
-    database.raw(`SELECT id, name, role FROM users WHERE name = "${newUser.name}" AND password = "${btoa(newUser.password)}"`)
+    database.raw(`SELECT id, name, email, role FROM users WHERE email = "${newUser.email}" AND password = "${btoa(newUser.password)}"`)
     .then(([rows]) => rows[0])
-    .then((row) => row ? res.json({ message: row }) : res.status(404).json({ message: 'Wrong name or password' }))
+    .then((row) => row ? res.json(row) : res.status(404).json({ message: 'Wrong email or password' }))
     .catch(next);
   } catch (err) {
     res.status(400).json({ message: err.message });
