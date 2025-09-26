@@ -4,7 +4,7 @@ exports.up = function(knex) {
     table.string('name').notNullable();
     table.string('email').notNullable().unique();
     table.string('password').notNullable();
-    table.string('role').notNullable().defaultTo('user');
+    table.enu('role', ['OPERADOR', 'FACTURADOR', 'ADMINISTRADOR']).notNullable().defaultTo('OPERADOR');
     table.boolean('active').notNullable().defaultTo(true);
     table.timestamps(true, true); // created_at, updated_at
   });

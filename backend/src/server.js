@@ -12,16 +12,15 @@ const morgan = require("morgan");
 // which is a best practice in Docker. Friends don't let friends code their apps to
 // do app logging to files in containers.
 
-const database = require("./database");
+const database = require("./database"); 
 
 // Appi
 const app = express();
+const userRoutes = require('./routes/userRoutes');
+const expenseRoutes = require('./routes/expenseRoutes'); 
 
 app.use(morgan("common"));
 app.use(express.json());
-
-const userRoutes = require('./routes/userRoutes');
-app.use('/api/users', userRoutes);
 
 app.get("/", function(req, res, next) {
   database.raw('select VERSION() version')
@@ -36,5 +35,8 @@ app.get("/healthz", function(req, res) {
   // if you want, you should be able to restrict this to localhost (include ipv4 and ipv6)
   res.send("I am happy and healthy\n");
 });
+
+app.use('/api/users', userRoutes);
+app.use('/api/expenses', expenseRoutes);
 
 module.exports = app;
