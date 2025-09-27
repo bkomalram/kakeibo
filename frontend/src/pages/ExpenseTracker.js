@@ -53,7 +53,7 @@ const ExpenseTracker = () => {
   // Cargar gastos desde la API al montar el componente
   useEffect(() => {
     const fetchExpenses = async () => {
-      const user_id = 1; // Simulando usuario logueado
+      const user_id = currentUser ? currentUser.id : null;
       try {
         // Cambia la URL por la de tu API
         const response = await fetch(`/api/expenses/${user_id}`);
@@ -77,22 +77,29 @@ const ExpenseTracker = () => {
 
   // Función para procesar imagen de factura (simulada)
   const processReceiptImage = async (file) => {
-    return new Promise((resolve) => {
-      // Simulamos el procesamiento OCR con datos aleatorios
-      setTimeout(() => {
-        const mockData = {
-          description: `Compra en ${['Supermercado', 'Restaurante', 'Farmacia', 'Gasolinera'][Math.floor(Math.random() * 4)]}`,
-          amount: (Math.random() * 200 + 10).toFixed(2),
-          category: categories[Math.floor(Math.random() * categories.length)],
-          items: [
-            'Producto 1 - $15.99',
-            'Producto 2 - $8.50',
-            'Producto 3 - $22.00'
-          ]
-        };
-        resolve(mockData);
-      }, 2000);
-    });
+    // Crea un FormData para enviar la imagen al backend
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      // Cambia la URL por la de tu backend que conecta con Document AI
+      const response = await fetch('/api/process-receipt', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) throw new Error('Error procesando la imagen');
+
+      // El backend debe retornar un objeto con los datos extraídos
+      const data = await response.json();
+
+      // Ejemplo de respuesta esperada:
+      // { description: 'Supermercado XYZ', amount: '123.45', date: '2025-09-25' }
+      return data;
+    } catch (error) {
+      console.error('Error en processReceiptImage:', error);
+      throw error;
+    }
   };
 
   // Manejar carga de archivo
@@ -118,7 +125,7 @@ const ExpenseTracker = () => {
     if (newExpense.description && newExpense.amount) {
       const expense = {
         id: Date.now(),
-        user_id: 1,
+        user_id: currentUser.id,
         ...newExpense,
         amount: parseFloat(newExpense.amount),
         createdAt: new Date().toISOString()
@@ -152,7 +159,7 @@ const ExpenseTracker = () => {
 
   // Eliminar gasto
   const deleteExpense = async (id) => {
-    const user_id = 1; // Simulando usuario logueado
+    const user_id = currentUser.id; // Simulando usuario logueado
     try {
         // Cambia la URL por la de tu API
         const response = await fetch(`/api/expenses/${user_id}/${id}`, {
