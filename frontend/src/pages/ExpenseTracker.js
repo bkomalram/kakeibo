@@ -234,7 +234,7 @@ const ExpenseTracker = () => {
 
         {/* Navigation */}
         <div className="bg-white rounded-lg shadow-lg mb-6">
-          <nav className="flex space-x-0">
+          <nav className="flex flex-wrap gap-2 justify-center">
             {[
               { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
               { id: 'add', label: 'Agregar Gasto', icon: PlusCircle },
@@ -244,7 +244,7 @@ const ExpenseTracker = () => {
               <button
                 key={id}
                 onClick={() => setActiveTab(id)}
-                className={`flex items-center space-x-2 px-6 py-4 font-medium transition-colors ${
+                className={`flex items-center space-x-2 px-4 py-3 md:px-6 md:py-4 font-medium transition-colors ${
                   activeTab === id
                     ? 'bg-blue-500 text-white rounded-lg'
                     : 'text-gray-600 hover:text-blue-500 hover:bg-blue-50'
