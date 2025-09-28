@@ -61,11 +61,15 @@ services:
       - /code/node_modules
     networks:
       - public
+      - containers
     depends_on:
       - backend
 networks:
   public:
   private:
+  containers:
+    external:
+      name: internalNetwork
 volumes:
   back-notused:
   db-data:
