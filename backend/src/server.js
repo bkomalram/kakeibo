@@ -19,6 +19,7 @@ const app = express();
 const userRoutes = require('./routes/userRoutes');
 const expenseRoutes = require('./routes/expenseRoutes'); 
 const receiptRoutes = require('./routes/receiptRoutes');
+const categoryRoutes = require('./routes/categoryRoutes');
 
 app.use(morgan("common"));
 app.use(express.json());
@@ -40,5 +41,6 @@ app.get("/healthz", function(req, res) {
 app.use('/api/users', userRoutes);
 app.use('/api/expenses', expenseRoutes);
 app.use('/api/receipts', receiptRoutes);
+app.use('/api/categories', categoryRoutes);
 
 module.exports = app;

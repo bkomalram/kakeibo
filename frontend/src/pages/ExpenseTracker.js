@@ -27,10 +27,10 @@ const ExpenseTracker = () => {
   
   
   const [expenses, setExpenses] = useState([]);
-  const [categories] = useState([
-    'Alimentación', 'Transporte', 'Entretenimiento', 'Salud', 'Educación', 
-    'Hogar', 'Ropa', 'Tecnología', 'Servicios', 'Otros'
-  ]);
+  const [categories, setCategories] = useState([]);
+  const [categoryForm, setCategoryForm] = useState({ name: '', icon: '' });
+  const [editingCategory, setEditingCategory] = useState(null);
+  const [categoryError, setCategoryError] = useState('');
   const [activeTab, setActiveTab] = useState('dashboard');
   const [newExpense, setNewExpense] = useState({
     description: '',
@@ -52,10 +52,10 @@ const ExpenseTracker = () => {
       }, [isAuthenticated, navigate]);
   // Cargar gastos desde la API al montar el componente
   useEffect(() => {
+    const user_id = currentUser ? currentUser.id : null;
+    // Cargar gastos
     const fetchExpenses = async () => {
-      const user_id = currentUser ? currentUser.id : null;
       try {
-        // Cambia la URL por la de tu API
         const response = await fetch(`/api/expenses/${user_id}`);
         if (!response.ok) throw new Error('Error al obtener los gastos');
         const data = await response.json();
@@ -64,8 +64,23 @@ const ExpenseTracker = () => {
         alert('No se pudieron cargar los gastos');
       }
     };
-    fetchExpenses();
-  }, []);
+    // Cargar categorías
+    const fetchCategories = async () => {
+      const user_id = currentUser ? currentUser.id : null;
+      try {
+        const response = await fetch(`/api/categories/${user_id}`);
+        if (!response.ok) throw new Error('Error al obtener categorías');
+        const data = await response.json();
+        setCategories(data.map(cat => cat.name));
+      } catch (error) {
+        setCategories(['Alimentación', 'Transporte', 'Entretenimiento', 'Salud', 'Educación', 'Hogar', 'Ropa', 'Tecnología', 'Servicios', 'Otros']);
+      }
+    };
+    if (user_id) {
+      fetchExpenses();
+      fetchCategories();
+    }
+  }, [currentUser]);
 
 
   // Manejar cierre de sesión
@@ -205,7 +220,6 @@ const ExpenseTracker = () => {
     };
   }).reverse();
 
-  console.log('last7Days:', last7Days);
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="max-w-6xl mx-auto p-4">
@@ -239,7 +253,8 @@ const ExpenseTracker = () => {
               { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
               { id: 'add', label: 'Agregar Gasto', icon: PlusCircle },
               { id: 'list', label: 'Lista de Gastos', icon: FileText },
-              { id: 'upload', label: 'Procesar Factura', icon: Upload }
+              { id: 'upload', label: 'Procesar Factura', icon: Upload },
+              { id: 'categories', label: 'Categorías', icon: PieChart }
             ].map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
@@ -504,7 +519,7 @@ const ExpenseTracker = () => {
                   Formatos soportados: JPG, PNG, HEIC
                 </p>
               </div>
-              
+            
               <div className="mt-6 bg-blue-50 rounded-lg p-4">
                 <h3 className="font-semibold text-blue-800 mb-2">¿Cómo funciona?</h3>
                 <ul className="text-sm text-blue-700 space-y-1">
@@ -516,10 +531,131 @@ const ExpenseTracker = () => {
               </div>
             </div>
           )}
+
+          {/* Category Management Tab */}
+          {activeTab === 'categories' && (
+            <div className="bg-white rounded-lg shadow-lg p-6">
+              <h2 className="text-2xl font-semibold mb-6">Gestionar Categorías</h2>
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  setCategoryError('');
+                  if (!categoryForm.name) {
+                    setCategoryError('El nombre es obligatorio');
+                    return;
+                  }
+                  const user_id = currentUser.id;
+                  try {
+                    let response;
+                    if (editingCategory) {
+                      response = await fetch(`/api/categories/${user_id}/${editingCategory.id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(categoryForm)
+                      });
+                    } else {
+                      response = await fetch(`/api/categories/${user_id}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(categoryForm)
+                      });
+                    }
+                    if (!response.ok) throw new Error('Error al guardar categoría');
+                    setCategoryForm({ name: '', icon: '' });
+                    setEditingCategory(null);
+                    // Recargar categorías
+                    const res = await fetch(`/api/categories/${user_id}`);
+                    const data = await res.json();
+                    setCategories(data.map(cat => cat.name));
+                  } catch (err) {
+                    setCategoryError('No se pudo guardar la categoría');
+                  }
+                }}
+                className="mb-6"
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Nombre</label>
+                    <input
+                      type="text"
+                      value={categoryForm.name}
+                      onChange={e => setCategoryForm({ ...categoryForm, name: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Ej: Mascotas"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Icono (opcional)</label>
+                    <input
+                      type="text"
+                      value={categoryForm.icon}
+                      onChange={e => setCategoryForm({ ...categoryForm, icon: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="emoji, url, etc."
+                    />
+                  </div>
+                </div>
+                {categoryError && <p className="text-red-500 mt-2">{categoryError}</p>}
+                <button
+                  type="submit"
+                  className="mt-6 bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 transition-colors flex items-center space-x-2"
+                >
+                  <PlusCircle size={20} />
+                  <span>{editingCategory ? 'Actualizar' : 'Agregar'} Categoría</span>
+                </button>
+                {editingCategory && (
+                  <button
+                    type="button"
+                    onClick={() => { setEditingCategory(null); setCategoryForm({ name: '', icon: '' }); }}
+                    className="ml-4 bg-gray-300 text-gray-700 px-6 py-2 rounded-md hover:bg-gray-400 transition-colors"
+                  >Cancelar edición</button>
+                )}
+              </form>
+              <h3 className="text-lg font-semibold mb-2">Tus Categorías</h3>
+              <ul className="space-y-2">
+                {categories.map((cat, idx) => (
+                  <li key={cat + idx} className="flex items-center justify-between p-2 border border-gray-200 rounded-lg">
+                    <span>{cat}</span>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        className="text-blue-500 hover:text-blue-700"
+                        onClick={async () => {
+                          // Buscar id real de la categoría
+                          const user_id = currentUser.id;
+                          const res = await fetch(`/api/categories/${user_id}`);
+                          const data = await res.json();
+                          const found = data.find(c => c.name === cat);
+                          setEditingCategory(found);
+                          setCategoryForm({ name: found.name, icon: found.icon || '' });
+                        }}
+                      >Editar</button>
+                      <button
+                        className="text-red-500 hover:text-red-700"
+                        onClick={async () => {
+                          const user_id = currentUser.id;
+                          // Buscar id real de la categoría
+                          const res = await fetch(`/api/categories/${user_id}`);
+                          const data = await res.json();
+                          const found = data.find(c => c.name === cat);
+                          if (found) {
+                            await fetch(`/api/categories/${user_id}/${found.id}`, { method: 'DELETE' });
+                            // Recargar categorías
+                            const res2 = await fetch(`/api/categories/${user_id}`);
+                            const data2 = await res2.json();
+                            setCategories(data2.map(cat => cat.name));
+                          }
+                        }}
+                      >Eliminar</button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
-};
+}
 
 export default ExpenseTracker;

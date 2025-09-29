@@ -8,7 +8,6 @@ exports.up = function(knex) {
     table.date('date').notNullable();
     table.boolean('active').notNullable().defaultTo(true);
     table.timestamps(true, true);
-    table.foreign('user_id').references('users.id').onDelete('CASCADE');
   });
 };
 
